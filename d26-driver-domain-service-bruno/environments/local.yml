@@ -1,0 +1,10 @@
+name: local
+variables:
+  - name: driving_licence_number
+    value: ""
+  - name: first_names
+    value: ""
+  - name: last_name
+    value: ""
+  - name: date_of_birth
+    value: ""

@@ -1,0 +1,178 @@
+================================================================================
+D26 DRIVER DOMAIN SERVICE - BUSINESS REQUIREMENTS
+================================================================================
+
+--------------------------------------------------------------------------------
+TICKET D26-001: Create a Driver Record
+--------------------------------------------------------------------------------
+
+As a consumer of the Driver Domain Service
+I want to create a new driver record
+So that driver information can be stored and referenced for future transactions
+
+Acceptance Criteria:
+
+  AC1 - Successful creation with all required fields
+    Given a valid request body containing first names, last name, date of birth,
+      and driving licence type
+    When I send a POST request to /api/v1/drivers
+    Then a 201 Created response is returned
+    And the response body contains the driver record with a generated driving
+      licence number
+
+  AC2 - Driving licence number is auto-generated when not provided
+    Given a valid request body without a driving licence number
+    When I send a POST request to /api/v1/drivers
+    Then the response contains a driving licence number in the format
+      LLLL DD DD LL LL derived from the driver's name and date of birth
+
+  AC3 - Driving licence number is accepted when provided
+    Given a valid request body with a driving licence number included
+    When I send a POST request to /api/v1/drivers
+    Then the provided driving licence number is stored as-is
+
+  AC4 - First names validation
+    Given a request body where first_names is missing, empty, exceeds 32
+      characters, or contains invalid characters (anything other than letters,
+      spaces, hyphens, or apostrophes)
+    When I send a POST request to /api/v1/drivers
+    Then a 422 response is returned with a descriptive validation error
+
+  AC5 - Last name validation
+    Given a request body where last_name is missing, empty, exceeds 32
+      characters, or contains invalid characters
+    When I send a POST request to /api/v1/drivers
+    Then a 422 response is returned with a descriptive validation error
+
+  AC6 - Date of birth format validation
+    Given a request body where date_of_birth is not in YYYY-MM-DD format
+    When I send a POST request to /api/v1/drivers
+    Then a 422 response is returned with a descriptive validation error
+
+  AC7 - Date of birth age validation - too young
+    Given a request body where date_of_birth indicates the driver is younger
+      than 17 years old
+    When I send a POST request to /api/v1/drivers
+    Then a 422 response is returned stating the driver must be at least 17
+
+  AC8 - Date of birth age validation - too old
+    Given a request body where date_of_birth indicates the driver is older
+      than 100 years old
+    When I send a POST request to /api/v1/drivers
+    Then a 422 response is returned stating the driver must be no older than 100
+
+  AC9 - Driving licence type validation
+    Given a request body where driving_licence_type is not "Full" or
+      "Provisional"
+    When I send a POST request to /api/v1/drivers
+    Then a 422 response is returned with a descriptive validation error
+
+
+--------------------------------------------------------------------------------
+TICKET D26-002: Retrieve a Driver Record
+--------------------------------------------------------------------------------
+
+As a consumer of the Driver Domain Service
+I want to retrieve a driver record by driving licence number
+So that I can view the details of an existing driver
+
+Acceptance Criteria:
+
+  AC1 - Successful retrieval
+    Given a driver record exists with driving licence number "BARX0101FOAA"
+    When I send a GET request to /api/v1/drivers/BARX0101FOAA
+    Then a 200 OK response is returned
+    And the response body contains the full driver record including first names,
+      last name, date of birth, driving licence type, and driving licence number
+
+  AC2 - Driver not found
+    Given no driver record exists with driving licence number "ZZZZ9999ZZAA"
+    When I send a GET request to /api/v1/drivers/ZZZZ9999ZZAA
+    Then a 404 Not Found response is returned
+    And the response body contains an error message stating "Driver not found"
+
+
+--------------------------------------------------------------------------------
+TICKET D26-003: Update a Driver Record
+--------------------------------------------------------------------------------
+
+As a consumer of the Driver Domain Service
+I want to update an existing driver record
+So that driver information can be kept accurate and up to date
+
+Acceptance Criteria:
+
+  AC1 - Successful update of first names
+    Given a driver record exists with driving licence number "BARX0101FOAA"
+    When I send a PATCH request to /api/v1/drivers/BARX0101FOAA with a new
+      first_names value
+    Then a 200 OK response is returned
+    And the first names are updated
+    And the driving licence number is regenerated to reflect the new name
+
+  AC2 - Successful update of last name
+    Given a driver record exists with driving licence number "BARX0101FOAA"
+    When I send a PATCH request to /api/v1/drivers/BARX0101FOAA with a new
+      last_name value
+    Then a 200 OK response is returned
+    And the last name is updated
+    And the driving licence number is regenerated to reflect the new name
+
+  AC3 - Successful update of driving licence type
+    Given a driver record exists with driving licence number "BARX0101FOAA"
+      and driving_licence_type "Provisional"
+    When I send a PATCH request to /api/v1/drivers/BARX0101FOAA with
+      driving_licence_type "Full"
+    Then a 200 OK response is returned
+    And the driving licence type is updated to "Full"
+    And the driving licence number remains unchanged
+
+  AC4 - At least one field must be provided
+    Given a driver record exists
+    When I send a PATCH request with no update fields in the body
+    Then a 400 response is returned indicating at least one of first_names,
+      last_name, or driving_licence_type must be provided
+
+  AC5 - Driver not found
+    Given no driver record exists with driving licence number "ZZZZ9999ZZAA"
+    When I send a PATCH request to /api/v1/drivers/ZZZZ9999ZZAA
+    Then a 404 Not Found response is returned
+    And the response body contains an error message stating "Driver not found"
+
+
+--------------------------------------------------------------------------------
+TICKET D26-004: Delete a Driver Record
+--------------------------------------------------------------------------------
+
+As a consumer of the Driver Domain Service
+I want to delete a driver record
+So that records can be removed when they are no longer required
+
+Acceptance Criteria:
+
+  AC1 - Successful deletion
+    Given a driver record exists with driving licence number "BARX0101FOAA",
+      first_names "Foo", last_name "Bar", and date_of_birth "1990-01-01"
+    When I send a DELETE request to /api/v1/drivers/BARX0101FOAA with matching
+      first_names, last_name, and date_of_birth in the request body
+    Then a 204 No Content response is returned
+    And the driver record is removed from the database
+
+  AC2 - Deletion requires matching personal details
+    Given a driver record exists with driving licence number "BARX0101FOAA"
+    When I send a DELETE request to /api/v1/drivers/BARX0101FOAA with
+      first_names, last_name, or date_of_birth that do not match the stored
+      record
+    Then a 422 response is returned stating which field does not match
+
+  AC3 - Driver not found
+    Given no driver record exists with driving licence number "ZZZZ9999ZZAA"
+    When I send a DELETE request to /api/v1/drivers/ZZZZ9999ZZAA
+    Then a 404 Not Found response is returned
+    And the response body contains an error message stating "Driver not found"
+
+  AC4 - All confirmation fields are required
+    Given a driver record exists
+    When I send a DELETE request without providing first_names, last_name,
+      or date_of_birth in the request body
+    Then a 400 response is returned indicating the missing required fields

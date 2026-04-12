@@ -1,0 +1,45 @@
+info:
+  name: Update Driver
+  type: http
+  seq: 4
+
+http:
+  method: PATCH
+  url: http://localhost:9292/api/v1/drivers/{{driving_licence_number}}
+  body:
+    type: json
+    data: |-
+      {
+        "first_names": "Abraham",
+        "last_name": "Lincoln"
+      }
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: after-response
+      code: |-
+        bru.setEnvVar("driving_licence_number", res.body.driving_licence_number);
+        bru.setEnvVar("first_names", res.body.first_names);
+        bru.setEnvVar("last_name", res.body.last_name);
+        bru.setEnvVar("date_of_birth", res.body.date_of_birth);
+    - type: tests
+      code: |-
+        test("Status code 200 returned for successful update driver request", function() {
+          expect(res.getStatus()).to.equal(200);
+        });
+
+        test("Response contains all driver fields", function() {
+            expect(res.body.id).to.be.an("number");
+            expect(res.body.driving_licence_number).to.not.be.empty;
+            expect(res.body.first_names).to.not.be.empty;
+            expect(res.body.last_name).to.not.be.empty;
+            expect(res.body.date_of_birth).to.not.be.empty;
+            expect(res.body.driving_licence_type).to.not.be.empty;
+        })
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

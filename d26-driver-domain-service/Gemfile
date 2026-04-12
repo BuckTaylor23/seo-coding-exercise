@@ -1,0 +1,9 @@
+# frozen_string_literal: true
+
+source 'https://rubygems.org'
+
+gem 'easy_talk', '~> 2.0'
+gem 'grape', '~> 3.2'
+gem 'puma', '~> 6.6'
+gem 'sequel', '~> 5.89'
+gem 'sqlite3', '~> 2.6'

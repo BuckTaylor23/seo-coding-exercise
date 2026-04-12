@@ -1,0 +1,8 @@
+# rubymine / intellij project specific settings
+/.idea
+
+# mac desktop services store
+.DS_Store
+
+# local sqlite3 database
+/d26-driver-domain-service/drivers.db

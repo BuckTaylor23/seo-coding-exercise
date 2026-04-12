@@ -1,0 +1,70 @@
+info:
+  name: Create Driver
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: http://localhost:9292/api/v1/drivers
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "first_names": "{{$randomFirstName}}",
+        "last_name": "{{$randomLastName}}",
+        "date_of_birth": "{{dob}}",
+        "driving_licence_type": "{{licenseType}}"
+      }
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        const statuses = ["Full", "Provisional"];
+
+        const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
+
+        const now = Date.now();
+
+        const min = new Date(now - 100 * 365.25 * 24 * 60 * 60 * 1000);
+
+        const max = new Date(now - 17 * 365.25 * 24 * 60 * 60 * 1000);
+
+        const random = new Date(min.getTime() + Math.random() * (max.getTime() - min.getTime()));
+
+        bru.setVar("licenseType", randomStatus);
+
+        bru.setVar("dob", random.toISOString().split("T")[0]);
+    - type: after-response
+      code: |-
+        bru.setEnvVar("driving_licence_number", res.body.driving_licence_number);
+        bru.setEnvVar("first_names", res.body.first_names);
+        bru.setEnvVar("last_name", res.body.last_name);
+        bru.setEnvVar("date_of_birth", res.body.date_of_birth);
+    - type: tests
+      code: |-
+        test("Status code 201 returned for successful create driver request", function() {
+          expect(res.getStatus()).to.equal(201);
+        });
+
+        test("Driver fields are correctly mapped to response object", function() {
+          expect(req.body.first_names).to.equal(res.body.first_names);
+          expect(req.body.last_name).to.equal(res.body.last_name);
+          expect(req.body.date_of_birth).to.equal(res.body.date_of_birth);
+          expect(req.body.driving_licence_type).to.equal(res.body.driving_licence_type);
+        });
+
+        test("Driver licence number is returned in correct format", function() {
+          expect(res.body.driving_licence_number).to.not.be.empty;
+          expect(res.body.driving_licence_number).to.match(/^[A-Za-z]{4}[0-9]{4}[A-Za-z]{4}$/)
+        })
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

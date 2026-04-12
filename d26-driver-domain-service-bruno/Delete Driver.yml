@@ -1,0 +1,31 @@
+info:
+  name: Delete Driver
+  type: http
+  seq: 5
+
+http:
+  method: DELETE
+  url: http://localhost:9292/api/v1/drivers/{{driving_licence_number}}
+  body:
+    type: json
+    data: |-
+      {
+        "first_names": "{{first_names}}",
+        "last_name": "{{last_name}}",
+        "date_of_birth": "{{date_of_birth}}"
+      }
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Status code 204 returned for successful deletion driver request", function() {
+          expect(res.getStatus()).to.equal(204);
+        });
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
