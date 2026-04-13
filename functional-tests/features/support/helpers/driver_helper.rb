@@ -51,7 +51,6 @@ module_function
     when 'last_name' then Faker::Name.last_name
     when 'driving_licence_type'
       value_from_driver(field) == 'Full' ? 'Provisional' : 'Full'
-    when 'empty' then ''
     else
       raise "Unknown update field: #{field}"
     end

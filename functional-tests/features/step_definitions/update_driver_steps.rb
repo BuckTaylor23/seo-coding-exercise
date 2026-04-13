@@ -3,7 +3,11 @@ And(/^an (?:update|delete) request (?:contains|is) (.*)$/) do |field|
     field = OPTIONAL_UPDATE_FIELDS.sample
   end
 
-  artefacts.request_body = { field.to_sym => DriverHelper.driver_details_update(field) }
+  artefacts.request_body = if field == 'empty'
+                             {}
+                           else
+                             { field.to_sym => DriverHelper.driver_details_update(field) }
+                           end
 end
 
 And(/^the driver record is updated successfully$/) do
